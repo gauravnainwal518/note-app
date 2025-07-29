@@ -1,0 +1,35 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Dependency directories
+node_modules/
+
+# Production build
+dist/
+build/
+
+# Local environment variables
+.env
+
+# Editor settings
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Coverage
+coverage/
+
+# React specific
+frontend/node_modules/
+frontend/.vite/
+frontend/dist/
+
+# TypeScript
+*.tsbuildinfo
