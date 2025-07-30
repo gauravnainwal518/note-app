@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import icon from "../assets/icon.svg";
 import image from "../assets/image.jpg";
-import api from "../api/axios";  
+import api from "../api/axios";
 
 interface SignupFormValues {
   name: string;
@@ -41,15 +41,12 @@ const SignupPage: React.FC = () => {
         otp: data.otp,
       });
 
-      // Save token for future authenticated requests
+      // Save token and user data in localStorage
       localStorage.setItem("token", res.data.token);
+      localStorage.setItem("user", JSON.stringify(res.data.user));
 
-      // Success message
       alert(`Signup Successful!\nWelcome ${res.data.user.name}`);
-
-      // Redirect to dashboard
       navigate("/dashboard");
-
     } catch (error: any) {
       console.error(error);
       alert(error.response?.data?.message || "Something went wrong");

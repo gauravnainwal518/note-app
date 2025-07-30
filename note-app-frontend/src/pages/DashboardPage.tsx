@@ -17,10 +17,9 @@ const DashboardPage: React.FC = () => {
   const [noteText, setNoteText] = useState("");
   const navigate = useNavigate();
 
-  const token = localStorage.getItem("token");
-
   // Fetch user info and notes
   useEffect(() => {
+    const token = localStorage.getItem("token") || sessionStorage.getItem("token");
     if (!token) {
       navigate("/login");
       return;
@@ -39,17 +38,20 @@ const DashboardPage: React.FC = () => {
         setNotes(notesRes.data);
       } catch (error) {
         console.error(error);
-        alert("Error fetching data");
+        alert("Error fetching data. Please login again.");
+        navigate("/login");
       } finally {
         setLoading(false);
       }
     };
 
     fetchUserAndNotes();
-  }, [token, navigate]);
+  }, [navigate]);
 
   const handleCreate = async () => {
+    const token = localStorage.getItem("token") || sessionStorage.getItem("token");
     if (!noteText.trim()) return alert("Note cannot be empty");
+
     try {
       const res = await api.post(
         "/notes",
@@ -65,6 +67,7 @@ const DashboardPage: React.FC = () => {
   };
 
   const handleDelete = async (id: string) => {
+    const token = localStorage.getItem("token") || sessionStorage.getItem("token");
     try {
       await api.delete(`/notes/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -78,10 +81,18 @@ const DashboardPage: React.FC = () => {
 
   const handleSignOut = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    sessionStorage.removeItem("token");
+    sessionStorage.removeItem("user");
     navigate("/login");
   };
 
-  if (loading) return <div className="p-4">Loading...</div>;
+  if (loading)
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <p className="text-lg font-semibold">Loading...</p>
+      </div>
+    );
 
   return (
     <div className="flex flex-col min-h-screen bg-white px-4 py-4">
@@ -91,22 +102,15 @@ const DashboardPage: React.FC = () => {
           <img src={icon} alt="Logo" className="w-8 h-8 mr-2" />
           <h1 className="text-lg font-semibold">Dashboard</h1>
         </div>
-        <button
-          onClick={handleSignOut}
-          className="text-blue-500 font-medium"
-        >
+        <button onClick={handleSignOut} className="text-blue-500 font-medium">
           Sign Out
         </button>
       </div>
 
       {/* Welcome Card */}
       <div className="border rounded-md shadow-sm p-4 mb-4">
-        <p className="text-lg font-bold">
-          Welcome, {user?.name || "User"}!
-        </p>
-        <p className="text-gray-600 text-sm">
-          Email: {user?.email || "N/A"}
-        </p>
+        <p className="text-lg font-bold">Welcome, {user?.name || "User"}!</p>
+        <p className="text-gray-600 text-sm">Email: {user?.email || "N/A"}</p>
       </div>
 
       {/* Create Note Input */}
