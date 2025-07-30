@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import SignupPage from "./pages/SignupPage";
+import LoginPage from "./pages/LoginPage";
 
 function App() {
   return (
@@ -8,8 +9,8 @@ function App() {
         {/* Signup page as default route */}
         <Route path="/" element={<SignupPage />} />
 
-        {/* Placeholder for login route */}
-        <Route path="/login" element={<div>Login Page Coming Soon</div>} />
+
+        <Route path="/login" element={<LoginPage/>} />
       </Routes>
     </Router>
   );
