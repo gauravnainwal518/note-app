@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import User from "../models/user.model";
 import { generateOtp } from "../utils/otp";
-import { sendEmail } from "../utils/sendEmail";
+import  sendEmail  from "../utils/sendEmail";
 import jwt from "jsonwebtoken";
 
 // Step 1: Request OTP
