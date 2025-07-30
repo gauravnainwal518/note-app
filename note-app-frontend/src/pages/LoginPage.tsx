@@ -37,7 +37,7 @@ const LoginPage: React.FC = () => {
   }, [timer]);
 
   const requestOtp = async (email: string) => {
-    await api.post("/auth/request-otp", { email, name: "User" });
+    await api.post("/request-otp", { email, name: "User" });  // <-- fixed path here
     setOtpSent(true);
     setTimer(60);
     alert("OTP sent to your email!");
@@ -49,7 +49,7 @@ const LoginPage: React.FC = () => {
         await requestOtp(data.email);
         return;
       }
-      const response = await api.post("/auth/verify-otp", {
+      const response = await api.post("/verify-otp", {   // <-- fixed path here
         email: data.email,
         otp: data.otp,
       });
@@ -81,7 +81,7 @@ const LoginPage: React.FC = () => {
       const googleToken = credentialResponse.credential;
       if (!googleToken) throw new Error("Google login failed: No credential returned.");
 
-      const response = await api.post("/auth/google-login", { token: googleToken });
+      const response = await api.post("/google-login", { token: googleToken });  // <-- fixed path here
 
       const keepLoggedIn = getValues("keepLoggedIn");
       if (keepLoggedIn) {
