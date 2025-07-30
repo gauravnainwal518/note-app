@@ -77,7 +77,7 @@ const SignupPage: React.FC = () => {
   return (
     <div className="flex flex-col lg:flex-row min-h-screen relative">
       {/* Logo */}
-      <div className="absolute top-4 left-4 flex items-center">
+      <div className="absolute top-4 left-4 flex items-center z-10 bg-white p-2 rounded-md shadow-sm sm:static sm:mb-4 sm:flex sm:justify-center sm:bg-transparent sm:shadow-none">
         <img src={icon} alt="Logo" className="w-8 h-8 mr-2" />
         <span className="text-xl font-semibold">HD</span>
       </div>
