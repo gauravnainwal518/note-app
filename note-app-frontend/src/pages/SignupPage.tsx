@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
+import { GoogleLogin } from "@react-oauth/google";
+import type { CredentialResponse } from "@react-oauth/google";
 import icon from "../assets/icon.svg";
 import image from "../assets/image.jpg";
 import api from "../api/axios";
@@ -25,7 +27,6 @@ const SignupPage: React.FC = () => {
   const onSubmit = async (data: SignupFormValues) => {
     try {
       if (!otpSent) {
-        // Request OTP
         await api.post("/auth/request-otp", {
           email: data.email,
           name: data.name,
@@ -35,13 +36,11 @@ const SignupPage: React.FC = () => {
         return;
       }
 
-      // Verify OTP
       const res = await api.post("/auth/verify-otp", {
         email: data.email,
         otp: data.otp,
       });
 
-      // Save token and user data in localStorage
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("user", JSON.stringify(res.data.user));
 
@@ -53,63 +52,73 @@ const SignupPage: React.FC = () => {
     }
   };
 
+  const handleGoogleSignupSuccess = async (credentialResponse: CredentialResponse) => {
+    try {
+      const googleToken = credentialResponse.credential;
+      if (!googleToken) throw new Error("Google signup failed: No credential returned.");
+
+      const response = await api.post("/auth/google-login", { token: googleToken });
+
+      localStorage.setItem("token", response.data.token);
+      localStorage.setItem("user", JSON.stringify(response.data.user));
+
+      alert(`Google Signup Successful! Welcome ${response.data.user.name}`);
+      navigate("/dashboard");
+    } catch (error: any) {
+      console.error("Google signup error:", error);
+      alert(error.response?.data?.message || "Google signup failed. Please try again.");
+    }
+  };
+
+  const handleGoogleSignupError = () => {
+    alert("Google signup failed. Please try again.");
+  };
+
   return (
-    <div className="flex min-h-screen relative">
+    <div className="flex flex-col lg:flex-row min-h-screen relative">
       {/* Logo */}
-      <div className="absolute top-6 left-6 flex items-center">
+      <div className="absolute top-4 left-4 flex items-center">
         <img src={icon} alt="Logo" className="w-8 h-8 mr-2" />
         <span className="text-xl font-semibold">HD</span>
       </div>
 
       {/* Left Form Section */}
-      <div className="flex flex-col justify-center ml-12 px-6 w-full lg:w-[30%] bg-white">
-        <div className="-mt-10">
+      <div className="flex flex-col justify-center px-6 py-10 w-full lg:w-[30%] bg-white">
+        <div className="max-w-md w-full mx-auto">
           <h2 className="text-2xl font-bold mb-2">Sign up</h2>
-          <p className="text-gray-500 mb-6">
-            Sign up to enjoy the feature of HD
-          </p>
+          <p className="text-gray-500 mb-6">Sign up to enjoy the feature of HD</p>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
             {/* Name Field */}
             <div className="relative">
               <div className="absolute -top-3 left-0">
-                <span className="bg-white px-2 text-gray-500 text-sm ml-4">
-                  Your Name
-                </span>
+                <span className="bg-white px-2 text-gray-500 text-sm ml-4">Your Name</span>
               </div>
               <input
                 type="text"
                 {...register("name", { required: "Name is required" })}
                 className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring focus:ring-blue-500"
               />
-              {errors.name && (
-                <p className="text-red-500 text-sm">{errors.name.message}</p>
-              )}
+              {errors.name && <p className="text-red-500 text-sm">{errors.name.message}</p>}
             </div>
 
             {/* DOB Field */}
             <div className="relative">
               <div className="absolute -top-3 left-0">
-                <span className="bg-white px-2 text-gray-500 text-sm ml-4">
-                  Date of Birth
-                </span>
+                <span className="bg-white px-2 text-gray-500 text-sm ml-4">Date of Birth</span>
               </div>
               <input
                 type="date"
                 {...register("dob", { required: "Date of Birth is required" })}
                 className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring focus:ring-blue-500"
               />
-              {errors.dob && (
-                <p className="text-red-500 text-sm">{errors.dob.message}</p>
-              )}
+              {errors.dob && <p className="text-red-500 text-sm">{errors.dob.message}</p>}
             </div>
 
             {/* Email Field */}
             <div className="relative">
               <div className="absolute -top-3 left-0">
-                <span className="bg-white px-2 text-gray-500 text-sm ml-4">
-                  Email Address
-                </span>
+                <span className="bg-white px-2 text-gray-500 text-sm ml-4">Email Address</span>
               </div>
               <input
                 type="email"
@@ -122,33 +131,24 @@ const SignupPage: React.FC = () => {
                 })}
                 className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring focus:ring-blue-500"
               />
-              {errors.email && (
-                <p className="text-red-500 text-sm">{errors.email.message}</p>
-              )}
+              {errors.email && <p className="text-red-500 text-sm">{errors.email.message}</p>}
             </div>
 
-            {/* OTP Field (if OTP sent) */}
+            {/* OTP Field */}
             {otpSent && (
               <div className="relative">
                 <div className="absolute -top-3 left-0">
-                  <span className="bg-white px-2 text-gray-500 text-sm ml-4">
-                    OTP
-                  </span>
+                  <span className="bg-white px-2 text-gray-500 text-sm ml-4">OTP</span>
                 </div>
                 <input
                   type="text"
                   {...register("otp", {
                     required: "OTP is required",
-                    minLength: {
-                      value: 4,
-                      message: "OTP must be at least 4 digits",
-                    },
+                    minLength: { value: 4, message: "OTP must be at least 4 digits" },
                   })}
                   className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring focus:ring-blue-500"
                 />
-                {errors.otp && (
-                  <p className="text-red-500 text-sm">{errors.otp.message}</p>
-                )}
+                {errors.otp && <p className="text-red-500 text-sm">{errors.otp.message}</p>}
               </div>
             )}
 
@@ -160,7 +160,15 @@ const SignupPage: React.FC = () => {
             </button>
           </form>
 
-          <p className="mt-4 text-sm">
+          {/* Divider */}
+          <div className="my-6 text-center text-gray-500">or</div>
+
+          {/* Google Signup Button */}
+          <div className="flex justify-center">
+            <GoogleLogin onSuccess={handleGoogleSignupSuccess} onError={handleGoogleSignupError} />
+          </div>
+
+          <p className="mt-4 text-sm text-center">
             Already have an account?{" "}
             <a href="/login" className="text-blue-500 font-semibold">
               Sign in
@@ -173,7 +181,7 @@ const SignupPage: React.FC = () => {
       <div
         className="hidden lg:block w-[70%] bg-no-repeat bg-center bg-cover"
         style={{ backgroundImage: `url(${image})` }}
-      ></div>
+      />
     </div>
   );
 };

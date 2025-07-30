@@ -4,6 +4,8 @@ import icon from "../assets/icon.svg";
 import image from "../assets/image.jpg";
 import api from "../api/axios";
 import { useNavigate, Link } from "react-router-dom";
+import { GoogleLogin } from "@react-oauth/google";
+import type { CredentialResponse } from "@react-oauth/google";
 
 interface LoginFormValues {
   email: string;
@@ -23,7 +25,6 @@ const LoginPage: React.FC = () => {
     formState: { errors },
   } = useForm<LoginFormValues>();
 
-  // Redirect if already logged in
   useEffect(() => {
     const token = localStorage.getItem("token") || sessionStorage.getItem("token");
     if (token) navigate("/dashboard");
@@ -53,7 +54,6 @@ const LoginPage: React.FC = () => {
         otp: data.otp,
       });
 
-      // Store token based on "Keep me logged in"
       if (data.keepLoggedIn) {
         localStorage.setItem("token", response.data.token);
         localStorage.setItem("user", JSON.stringify(response.data.user));
@@ -63,7 +63,7 @@ const LoginPage: React.FC = () => {
       }
 
       alert(`Login Successful! Welcome ${response.data.user.name}`);
-      navigate("/dashboard"); // Redirect after login success
+      navigate("/dashboard");
     } catch (error: any) {
       console.error("Login error:", error);
       alert(error.response?.data?.message || "Something went wrong. Please try again.");
@@ -76,23 +76,51 @@ const LoginPage: React.FC = () => {
     await requestOtp(email);
   };
 
+  const handleGoogleLoginSuccess = async (credentialResponse: CredentialResponse) => {
+    try {
+      const googleToken = credentialResponse.credential;
+      if (!googleToken) throw new Error("Google login failed: No credential returned.");
+
+      const response = await api.post("/auth/google-login", { token: googleToken });
+
+      const keepLoggedIn = getValues("keepLoggedIn");
+      if (keepLoggedIn) {
+        localStorage.setItem("token", response.data.token);
+        localStorage.setItem("user", JSON.stringify(response.data.user));
+      } else {
+        sessionStorage.setItem("token", response.data.token);
+        sessionStorage.setItem("user", JSON.stringify(response.data.user));
+      }
+
+      alert(`Google Login Successful! Welcome ${response.data.user.name}`);
+      navigate("/dashboard");
+    } catch (error: any) {
+      console.error("Google login error:", error);
+      alert(error.response?.data?.message || "Google login failed. Please try again.");
+    }
+  };
+
+  const handleGoogleLoginError = () => {
+    alert("Google login failed. Please try again.");
+  };
+
   return (
-    <div className="flex min-h-screen relative">
+    <div className="flex flex-col lg:flex-row min-h-screen relative">
       {/* Logo */}
-      <div className="absolute top-6 left-6 flex items-center">
+      <div className="absolute top-4 left-4 flex items-center">
         <img src={icon} alt="Logo" className="w-8 h-8 mr-2" />
         <span className="text-xl font-semibold">HD</span>
       </div>
 
-      {/* Form */}
-      <div className="flex flex-col justify-center ml-12 px-6 w-full lg:w-[30%] bg-white">
-        <div className="-mt-10">
+      {/* Form Section */}
+      <div className="flex flex-col justify-center px-6 py-10 w-full lg:w-[30%] bg-white">
+        <div className="max-w-md w-full mx-auto">
           <h2 className="text-2xl font-bold mb-2">Sign In</h2>
           <p className="text-gray-500 mb-6">Please login to continue to your account.</p>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             {/* Email */}
-            <div className="relative">
+            <div>
               <input
                 type="email"
                 placeholder="Email"
@@ -138,8 +166,16 @@ const LoginPage: React.FC = () => {
             </button>
           </form>
 
+          {/* Divider */}
+          <div className="my-6 text-center text-gray-500">or</div>
+
+          {/* Google Login Button */}
+          <div className="flex justify-center">
+            <GoogleLogin onSuccess={handleGoogleLoginSuccess} onError={handleGoogleLoginError} />
+          </div>
+
           {/* New Signup Link */}
-          <p className="mt-4 text-sm">
+          <p className="mt-4 text-sm text-center">
             Need an account?{" "}
             <Link to="/" className="text-blue-500 underline font-semibold hover:text-blue-700">
               Create one
@@ -148,6 +184,7 @@ const LoginPage: React.FC = () => {
         </div>
       </div>
 
+      {/* Image Section */}
       <div
         className="hidden lg:block w-[70%] bg-no-repeat bg-center bg-cover"
         style={{ backgroundImage: `url(${image})` }}
