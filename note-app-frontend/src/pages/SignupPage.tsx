@@ -1,7 +1,9 @@
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
+import { useNavigate } from "react-router-dom";
 import icon from "../assets/icon.svg";
 import image from "../assets/image.jpg";
+import api from "../api/axios";  
 
 interface SignupFormValues {
   name: string;
@@ -12,6 +14,7 @@ interface SignupFormValues {
 
 const SignupPage: React.FC = () => {
   const [otpSent, setOtpSent] = useState(false);
+  const navigate = useNavigate();
 
   const {
     register,
@@ -19,15 +22,38 @@ const SignupPage: React.FC = () => {
     formState: { errors },
   } = useForm<SignupFormValues>();
 
-  const onSubmit = (data: SignupFormValues) => {
-    if (!otpSent) {
-      setOtpSent(true);
-      alert("OTP sent to your email!");
-      return;
+  const onSubmit = async (data: SignupFormValues) => {
+    try {
+      if (!otpSent) {
+        // Request OTP
+        await api.post("/auth/request-otp", {
+          email: data.email,
+          name: data.name,
+        });
+        setOtpSent(true);
+        alert("OTP sent to your email!");
+        return;
+      }
+
+      // Verify OTP
+      const res = await api.post("/auth/verify-otp", {
+        email: data.email,
+        otp: data.otp,
+      });
+
+      // Save token for future authenticated requests
+      localStorage.setItem("token", res.data.token);
+
+      // Success message
+      alert(`Signup Successful!\nWelcome ${res.data.user.name}`);
+
+      // Redirect to dashboard
+      navigate("/dashboard");
+
+    } catch (error: any) {
+      console.error(error);
+      alert(error.response?.data?.message || "Something went wrong");
     }
-    alert(
-      `Signup Successful!\nName: ${data.name}\nDOB: ${data.dob}\nEmail: ${data.email}`
-    );
   };
 
   return (
@@ -64,23 +90,22 @@ const SignupPage: React.FC = () => {
               )}
             </div>
 
-           {/* DOB Field (simple date input with native icon only) */}
-<div className="relative">
-  <div className="absolute -top-3 left-0">
-    <span className="bg-white px-2 text-gray-500 text-sm ml-4">
-      Date of Birth
-    </span>
-  </div>
-  <input
-    type="date"
-    {...register("dob", { required: "Date of Birth is required" })}
-    className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring focus:ring-blue-500"
-  />
-  {errors.dob && (
-    <p className="text-red-500 text-sm">{errors.dob.message}</p>
-  )}
-</div>
-
+            {/* DOB Field */}
+            <div className="relative">
+              <div className="absolute -top-3 left-0">
+                <span className="bg-white px-2 text-gray-500 text-sm ml-4">
+                  Date of Birth
+                </span>
+              </div>
+              <input
+                type="date"
+                {...register("dob", { required: "Date of Birth is required" })}
+                className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring focus:ring-blue-500"
+              />
+              {errors.dob && (
+                <p className="text-red-500 text-sm">{errors.dob.message}</p>
+              )}
+            </div>
 
             {/* Email Field */}
             <div className="relative">

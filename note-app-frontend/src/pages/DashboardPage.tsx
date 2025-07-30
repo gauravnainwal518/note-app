@@ -1,26 +1,87 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import icon from "../assets/icon.svg";
 import { AiOutlineDelete } from "react-icons/ai";
+import api from "../api/axios";
+import { useNavigate } from "react-router-dom";
 
 interface Note {
-  id: number;
-  text: string;
+  _id: string;
+  title: string;
+  content: string;
 }
 
 const DashboardPage: React.FC = () => {
-  const [notes, setNotes] = useState<Note[]>([
-    { id: 1, text: "Note 1" },
-    { id: 2, text: "Note 2" },
-  ]);
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<any>(null);
+  const [noteText, setNoteText] = useState("");
+  const navigate = useNavigate();
 
-  const handleDelete = (id: number) => {
-    setNotes((prev) => prev.filter((note) => note.id !== id));
+  const token = localStorage.getItem("token");
+
+  // Fetch user info and notes
+  useEffect(() => {
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
+    const fetchUserAndNotes = async () => {
+      try {
+        const userRes = await api.get("/auth/me", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setUser(userRes.data.user);
+
+        const notesRes = await api.get("/notes", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setNotes(notesRes.data);
+      } catch (error) {
+        console.error(error);
+        alert("Error fetching data");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserAndNotes();
+  }, [token, navigate]);
+
+  const handleCreate = async () => {
+    if (!noteText.trim()) return alert("Note cannot be empty");
+    try {
+      const res = await api.post(
+        "/notes",
+        { title: noteText, content: noteText },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setNotes((prev) => [...prev, res.data]);
+      setNoteText("");
+    } catch (error) {
+      console.error(error);
+      alert("Error creating note");
+    }
   };
 
-  const handleCreate = () => {
-    const newId = notes.length + 1;
-    setNotes((prev) => [...prev, { id: newId, text: `Note ${newId}` }]);
+  const handleDelete = async (id: string) => {
+    try {
+      await api.delete(`/notes/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setNotes((prev) => prev.filter((note) => note._id !== id));
+    } catch (error) {
+      console.error(error);
+      alert("Error deleting note");
+    }
   };
+
+  const handleSignOut = () => {
+    localStorage.removeItem("token");
+    navigate("/login");
+  };
+
+  if (loading) return <div className="p-4">Loading...</div>;
 
   return (
     <div className="flex flex-col min-h-screen bg-white px-4 py-4">
@@ -30,22 +91,40 @@ const DashboardPage: React.FC = () => {
           <img src={icon} alt="Logo" className="w-8 h-8 mr-2" />
           <h1 className="text-lg font-semibold">Dashboard</h1>
         </div>
-        <button className="text-blue-500 font-medium">Sign Out</button>
+        <button
+          onClick={handleSignOut}
+          className="text-blue-500 font-medium"
+        >
+          Sign Out
+        </button>
       </div>
 
       {/* Welcome Card */}
       <div className="border rounded-md shadow-sm p-4 mb-4">
-        <p className="text-lg font-bold">Welcome, Jonas Kahnwald!</p>
-        <p className="text-gray-600 text-sm">Email: xxxxxx@xxxx.com</p>
+        <p className="text-lg font-bold">
+          Welcome, {user?.name || "User"}!
+        </p>
+        <p className="text-gray-600 text-sm">
+          Email: {user?.email || "N/A"}
+        </p>
       </div>
 
-      {/* Create Note Button */}
-      <button
-        onClick={handleCreate}
-        className="w-full bg-blue-500 text-white py-2 rounded-md mb-4 hover:bg-blue-600"
-      >
-        Create Note
-      </button>
+      {/* Create Note Input */}
+      <div className="flex mb-4">
+        <input
+          type="text"
+          placeholder="Enter note title"
+          value={noteText}
+          onChange={(e) => setNoteText(e.target.value)}
+          className="flex-1 border border-gray-300 rounded-md px-4 py-2 focus:ring focus:ring-blue-500"
+        />
+        <button
+          onClick={handleCreate}
+          className="ml-2 bg-blue-500 text-white px-4 rounded-md hover:bg-blue-600"
+        >
+          Create
+        </button>
+      </div>
 
       {/* Notes List */}
       <div>
@@ -53,15 +132,18 @@ const DashboardPage: React.FC = () => {
         <div className="space-y-2">
           {notes.map((note) => (
             <div
-              key={note.id}
+              key={note._id}
               className="flex justify-between items-center border rounded-md p-2"
             >
-              <span>{note.text}</span>
-              <button onClick={() => handleDelete(note.id)}>
+              <span>{note.title}</span>
+              <button onClick={() => handleDelete(note._id)}>
                 <AiOutlineDelete size={20} className="text-gray-600" />
               </button>
             </div>
           ))}
+          {notes.length === 0 && (
+            <p className="text-gray-500 text-sm">No notes yet</p>
+          )}
         </div>
       </div>
     </div>

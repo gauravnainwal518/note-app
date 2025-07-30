@@ -1,10 +1,12 @@
-import mongoose, { Document, Schema } from "mongoose";
+import mongoose, { Schema, Document } from "mongoose";
 
 export interface IUser extends Document {
   name: string;
   email: string;
   otp?: string;
   otpExpires?: Date;
+  createdAt?: Date;   
+  updatedAt?: Date;   
 }
 
 const userSchema = new Schema<IUser>(
@@ -14,7 +16,7 @@ const userSchema = new Schema<IUser>(
     otp: { type: String },
     otpExpires: { type: Date },
   },
-  { timestamps: true }
+  { timestamps: true } //this enables createdAt & updatedAt
 );
 
 export default mongoose.model<IUser>("User", userSchema);

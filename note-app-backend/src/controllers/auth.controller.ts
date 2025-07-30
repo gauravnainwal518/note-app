@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import User from "../models/user.model";
 import { generateOtp } from "../utils/otp";
-import  sendEmail  from "../utils/sendEmail";
+import sendEmail from "../utils/sendEmail";
 import jwt from "jsonwebtoken";
 
 // Step 1: Request OTP
@@ -45,8 +45,29 @@ export const verifyOtp = async (req: Request, res: Response) => {
 
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET as string, { expiresIn: "1d" });
 
-    res.json({ message: "Login successful", token, user });
+    res.json({
+      message: "Login successful",
+      token,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        createdAt: user.createdAt,
+      },
+    });
   } catch (error) {
     res.status(500).json({ message: "Error verifying OTP", error });
+  }
+};
+
+// Step 3: Get Logged-in User
+export const getMe = async (req: any, res: Response) => {
+  try {
+    const user = await User.findById(req.user.id).select("-otp -otpExpires");
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    res.json({ user });
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching user", error });
   }
 };

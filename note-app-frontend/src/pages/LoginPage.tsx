@@ -3,6 +3,8 @@ import { useForm } from "react-hook-form";
 import icon from "../assets/icon.svg";
 import image from "../assets/image.jpg";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
+import api from "../api/axios"; // <-- our axios instance
+import { useNavigate } from "react-router-dom";
 
 interface LoginFormValues {
   email: string;
@@ -13,6 +15,7 @@ interface LoginFormValues {
 const LoginPage: React.FC = () => {
   const [otpSent, setOtpSent] = useState(false);
   const [showOtp, setShowOtp] = useState<boolean>(false);
+  const navigate = useNavigate();
 
   const {
     register,
@@ -20,15 +23,35 @@ const LoginPage: React.FC = () => {
     formState: { errors },
   } = useForm<LoginFormValues>();
 
-  const onSubmit = (data: LoginFormValues) => {
-    if (!otpSent) {
-      setOtpSent(true);
-      alert("OTP sent to your email!");
-      return;
+  const onSubmit = async (data: LoginFormValues) => {
+    try {
+      if (!otpSent) {
+        // Step 1: Request OTP
+        await api.post("/auth/request-otp", { email: data.email, name: "User" });
+        setOtpSent(true);
+        alert("OTP sent to your email!");
+        return;
+      }
+
+      // Step 2: Verify OTP
+      const response = await api.post("/auth/verify-otp", {
+        email: data.email,
+        otp: data.otp,
+      });
+
+      // Save token in localStorage
+      localStorage.setItem("token", response.data.token);
+
+      // Show success message and redirect
+      alert(`Login Successful! Welcome ${response.data.user.name}`);
+      navigate("/dashboard"); // Redirect to dashboard
+
+    } catch (error: any) {
+      console.error("Login error:", error);
+      alert(
+        error.response?.data?.message || "Something went wrong. Please try again."
+      );
     }
-    alert(
-      `Login Successful!\nEmail: ${data.email}\nKeep Logged In: ${data.keepLoggedIn}`
-    );
   };
 
   return (
