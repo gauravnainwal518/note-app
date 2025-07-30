@@ -14,7 +14,10 @@ const app: Application = express();
 const PORT = process.env.PORT || 5000;
 
 // Middlewares
-app.use(cors());
+app.use(cors({
+  origin: "https://note-app-five-silk.vercel.app",  // frontend domain here
+  credentials: true,
+}));
 app.use(express.json());
 
 // Routes
