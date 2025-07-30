@@ -77,19 +77,19 @@ const SignupPage: React.FC = () => {
   return (
     <div className="flex flex-col lg:flex-row min-h-screen relative">
       {/* Logo */}
-      <div className="absolute top-4 left-4 flex items-center z-10 bg-white p-2 rounded-md shadow-sm sm:static sm:mb-4 sm:flex sm:justify-center sm:bg-transparent sm:shadow-none">
-        <img src={icon} alt="Logo" className="w-8 h-8 mr-2" />
-        <span className="text-xl font-semibold">HD</span>
+      <div className="absolute top-4 left-4 flex items-center gap-2">
+        <img src={icon} alt="Logo" className="w-6 h-6 sm:w-8 sm:h-8" />
+        <span className="text-lg sm:text-xl font-semibold">HD</span>
       </div>
 
-      {/* Left Form Section */}
-      <div className="flex flex-col justify-center px-6 py-10 w-full lg:w-[30%] bg-white">
+      {/* Form Section */}
+      <div className="flex flex-col justify-center px-6 pt-16 sm:pt-10 py-10 w-full lg:w-[30%] bg-white">
         <div className="max-w-md w-full mx-auto">
           <h2 className="text-2xl font-bold mb-2">Sign up</h2>
           <p className="text-gray-500 mb-6">Sign up to enjoy the feature of HD</p>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-            {/* Name Field */}
+            {/* Name */}
             <div className="relative">
               <div className="absolute -top-3 left-0">
                 <span className="bg-white px-2 text-gray-500 text-sm ml-4">Your Name</span>
@@ -102,7 +102,7 @@ const SignupPage: React.FC = () => {
               {errors.name && <p className="text-red-500 text-sm">{errors.name.message}</p>}
             </div>
 
-            {/* DOB Field */}
+            {/* DOB */}
             <div className="relative">
               <div className="absolute -top-3 left-0">
                 <span className="bg-white px-2 text-gray-500 text-sm ml-4">Date of Birth</span>
@@ -115,7 +115,7 @@ const SignupPage: React.FC = () => {
               {errors.dob && <p className="text-red-500 text-sm">{errors.dob.message}</p>}
             </div>
 
-            {/* Email Field */}
+            {/* Email */}
             <div className="relative">
               <div className="absolute -top-3 left-0">
                 <span className="bg-white px-2 text-gray-500 text-sm ml-4">Email Address</span>
@@ -134,7 +134,7 @@ const SignupPage: React.FC = () => {
               {errors.email && <p className="text-red-500 text-sm">{errors.email.message}</p>}
             </div>
 
-            {/* OTP Field */}
+            {/* OTP */}
             {otpSent && (
               <div className="relative">
                 <div className="absolute -top-3 left-0">
@@ -163,7 +163,7 @@ const SignupPage: React.FC = () => {
           {/* Divider */}
           <div className="my-6 text-center text-gray-500">or</div>
 
-          {/* Google Signup Button */}
+          {/* Google Signup */}
           <div className="flex justify-center">
             <GoogleLogin onSuccess={handleGoogleSignupSuccess} onError={handleGoogleSignupError} />
           </div>
@@ -177,7 +177,7 @@ const SignupPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Right Image Section */}
+      {/* Image Section */}
       <div
         className="hidden lg:block w-[70%] bg-no-repeat bg-center bg-cover"
         style={{ backgroundImage: `url(${image})` }}
