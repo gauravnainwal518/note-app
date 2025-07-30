@@ -27,8 +27,7 @@ const SignupPage: React.FC = () => {
   const onSubmit = async (data: SignupFormValues) => {
     try {
       if (!otpSent) {
-        // Changed from "/auth/request-otp" to "/request-otp"
-        await api.post("/request-otp", {
+        await api.post("/auth/request-otp", {
           email: data.email,
           name: data.name,
         });
@@ -37,8 +36,7 @@ const SignupPage: React.FC = () => {
         return;
       }
 
-      // Changed from "/auth/verify-otp" to "/verify-otp"
-      const res = await api.post("/verify-otp", {
+      const res = await api.post("/auth/verify-otp", {
         email: data.email,
         otp: data.otp,
       });
@@ -59,8 +57,7 @@ const SignupPage: React.FC = () => {
       const googleToken = credentialResponse.credential;
       if (!googleToken) throw new Error("Google signup failed: No credential returned.");
 
-      // Changed from "/auth/google-login" to "/google-login"
-      const response = await api.post("/google-login", { token: googleToken });
+      const response = await api.post("/auth/google-login", { token: googleToken });
 
       localStorage.setItem("token", response.data.token);
       localStorage.setItem("user", JSON.stringify(response.data.user));
